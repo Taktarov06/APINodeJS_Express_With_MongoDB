@@ -27,12 +27,12 @@ class AuthorController {
     try {
       const newAuthor = await author.create(req.body);
       res.status(201).json({ message: "criado com sucesso", 
-      livro: newAuthor });
+        livro: newAuthor });
     } catch (erro) {
       res.status(500).json({ message: `${erro.message} - 
       falha ao cadastrar autor` });
     }
-  }
+  };
 
   static updateAuthor = async (req, res) => {
     try {

@@ -6,13 +6,13 @@ const connection = await dataBaseConnect(); // Conecta o app.js com o arquivo de
 
 // Metodo on espera um evento que quando ocorrer, nesse caso, mostra o erro de conexã do mongoose com o MongoDB
 connection.on("error",  (erro) => {
-    console.error("Conexão falha", erro);
+  console.error("Conexão falha", erro);
 });
 
 // Metodo once tenta realizar a conexão com o evento "open", ou seja quando a conexão forbem sucedida.
 connection.once("open", () => {
-    console.log("Conexão bem sucedida");
-})
+  console.log("Conexão bem sucedida");
+});
 
 const app = express();
 routes(app);
