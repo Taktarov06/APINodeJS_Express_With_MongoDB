@@ -1,14 +1,22 @@
 import mongoose from "mongoose";
+import BaseError from "../Errors/baseError.js";
+import IncorrectRequest from "../Errors/incorrectRequest.js";
+import ValidationError from "../Errors/validationError.js";
+import PageNotFound from "../Errors/pageNotFound.js";
+
 
 
 // eslint-disable-next-line no-unused-vars
 function errorManipulator(e, req, res, next) {
   if (e instanceof mongoose.Error.CastError) {
-    res.status(400).send({ message: "Dados da requisição incorretos." });
+    new IncorrectRequest().sendAnswer(res);
+  } else if (e instanceof mongoose.Error.ValidationError) {
+    new ValidationError(e).sendAnswer(res);
+  } else if (e instanceof PageNotFound) {
+    e.sendAnswer(res);
   } else {
-    res.status(500).send({ message: "Erro interno do servidor" });
+    new BaseError().sendAnswer(res);
   }
 }
-
 
 export default errorManipulator;

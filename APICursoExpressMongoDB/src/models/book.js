@@ -3,9 +3,20 @@ import { authorSchema } from "./Author.js";
 
 const bookSchema = new mongoose.Schema({
   id: { type: mongoose.Schema.Types.ObjectId },
-  title: { type: String, required: true},
+  title: {
+    type: String,
+    required: [
+      true,
+      "Titulo do livro é obrigatório"]
+  },
   pagerNumber: { type: Number },
-  Price: { type: String, required: true},
+  Price: {
+    type: String,
+    required: [
+      true,
+      "Preço do livro é obrigatório"
+    ]
+  },
   Group: { type: String },
   Editor: { type: String },
   author: authorSchema

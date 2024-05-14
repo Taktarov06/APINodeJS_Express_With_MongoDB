@@ -1,4 +1,5 @@
 import { author } from "../models/Author.js";
+import PageNotFound from "../Errors/pageNotFound.js";
 
 class AuthorController {
 
@@ -18,7 +19,7 @@ class AuthorController {
       if (authorResult) {
         res.status(200).json(authorResult);
       } else {
-        res.status(404).send({ message: "Autor não encontrado" });
+        next(new PageNotFound("Autor não encontrado"));
       }
     } catch (e) {
       next(e);

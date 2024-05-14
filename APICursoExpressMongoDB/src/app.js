@@ -2,6 +2,7 @@ import express from "express";
 import dataBaseConnect from "./config/dbconnect.js";
 import routes from "./routes/index.js";
 import errorManipulator from "./middlewares/errors.js";
+import manipulator404 from "./middlewares/manipulator404.js";
 
 const connection = await dataBaseConnect(); // Conecta o app.js com o arquivo de conexão com o banco MongoDB
 
@@ -18,6 +19,8 @@ connection.once("open", () => {
 const app = express();
 app.use(express.json());
 routes(app);
+
+app.use(manipulator404);
 
 
 app.use(errorManipulator);
