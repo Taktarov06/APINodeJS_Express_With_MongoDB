@@ -1,14 +1,16 @@
-import book from "../models/book.js";
-import { author } from "../models/Author.js";
+import PageNotFound from "../Errors/pageNotFound.js";
+import { author, book } from "../models/index.js";
+
 
 class BookController {
 
   static listBooks = async (req, res, next) => {
     try {
-      const bookList = await book.find({}); // Metodo Moongose q conecta com o database e busca o que passa dentro do parametro da função
-      // const bookList = await book.find({}).populate("author").exec(); // Metodo para fazer a busca por referencia ao inves do metodo q o NoSQL usa 
+      // const bookList = await book.find({}); // Metodo Moongose q conecta com o database e busca o que passa dentro do parametro da função
+      const bookList = await book.find({}).populate("author").exec(); // Metodo para fazer a busca por referencia ao inves do metodo q o NoSQL usa 
       res.status(200).json(bookList);
     } catch (e) {
+      console.error(e.message);
       next(e);
     }
   };
@@ -17,7 +19,11 @@ class BookController {
     try {
       const id = req.params.id;
       const bookSearched = await book.findById(id); // Metodo Moongose q conecta com o database e busca o que passa dentro do parametro da função
-      res.status(200).json(bookSearched);
+      if (bookSearched) {
+        res.status(200).json(bookSearched);
+      } else {
+        next(new PageNotFound("Livro não encontrado"));
+      }
     } catch (e) {
       next(e);
     }
@@ -26,10 +32,10 @@ class BookController {
   static registerBook = async (req, res, next) => {
     const bookNew = req.body;
     try {
-      // const newBook await book.create(bookNew); Caso faça por referencia, é assim q usa o metodo de criação de livro
-      const authorSearched = await author.findById(bookNew.author);
-      const completyBook = { ...bookNew, author: { ...authorSearched } };
-      const newBook = await book.create(completyBook);
+      const newBook = await book.create(bookNew); // Caso faça por referencia, é assim q usa o metodo de criação de livro
+      // const authorSearched = await author.findById(bookNew.author);
+      // const completyBook = { ...bookNew, author: { ...authorSearched } };
+      // const newBook = await book.create(completyBook);
       res.status(201).json({
         message: "Criado com sucesso",
         livro: newBook
@@ -42,8 +48,12 @@ class BookController {
   static updateBook = async (req, res, next) => {
     try {
       const id = req.params.id;
-      await book.findByIdAndUpdate(id, req.body);
-      res.status(201).json({ message: "Livro atualizado com sucesso" });
+      const result = await book.findByIdAndUpdate(id, req.body);
+      if (result) {
+        res.status(201).json({ message: "Livro atualizado com sucesso" });
+      } else {
+        next(new PageNotFound("Livro não encontrado"));
+      }
     } catch (e) {
       next(e);
     }
@@ -52,23 +62,59 @@ class BookController {
   static deleteBook = async (req, res, next) => {
     try {
       const id = req.params.id;
-      await book.findByIdAndDelete(id);
-      res.status(201).json({ message: "Livro deletado com sucesso" });
+      const result = await book.findByIdAndDelete(id);
+      if (result) {
+        res.status(201).json({ message: "Livro deletado com sucesso" });
+      } else {
+        next(new PageNotFound("Livro não encontrado"));
+      }
     } catch (e) {
       next(e);
     }
   };
 
-  static async listBookByGroup (req, res, next) {
-    const group = req.query.group;
+  static listBookBySearch = async (req, res, next) => {
     try {
-      const bookByGroup = await book.find({ Group: group });
-      res.status(200).json(bookByGroup);
+      const resultQuery = await searchBook(req.query);
+      if (resultQuery){
+        const result = await book
+        .find(resultQuery)
+        .populate("author");
+
+      res.status(200).json(result);
+      } else {
+        res.status(200).send([]);
+      }
+      
     } catch (e) {
       next(e);
     }
   };
-
 };
+
+async function searchBook(values) {
+  const { group, title, minPages, maxPages, nameAuthor } = values;
+  const regex = RegExp(title, "i");
+  let search = {};
+
+  if (group) search.group = group;
+  if (title) search.title = regex;
+
+  if (minPages || maxPages) search.pagerNumber = {};
+
+  if (minPages) search.pagerNumber.$gte = minPages;
+  if (maxPages) search.pagerNumber.$lte = maxPages;
+
+  if (nameAuthor) {
+    const authors = await author.findOne({ name: nameAuthor });
+    if(authors){
+      search.author = authors._id;
+    } else {
+      search = null;
+    }
+  }
+
+  return search;
+}
 
 export default BookController;

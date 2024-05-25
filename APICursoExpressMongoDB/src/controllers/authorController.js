@@ -1,4 +1,4 @@
-import { author } from "../models/Author.js";
+import { author } from "../models/index.js";
 import PageNotFound from "../Errors/pageNotFound.js";
 
 class AuthorController {
@@ -41,8 +41,12 @@ class AuthorController {
   static updateAuthor = async (req, res, next) => {
     try {
       const id = req.params.id;
-      await author.findByIdAndUpdate(id, req.body);
-      res.status(200).json({ message: "autor atualizado" });
+      const result = await author.findByIdAndUpdate(id, req.body);
+      if (result) {
+        res.status(200).json({ message: "autor atualizado" });
+      } else {
+        next(new PageNotFound("Autor não encontrado"));
+      }
     } catch (e) {
       next(e);
     }
@@ -51,9 +55,23 @@ class AuthorController {
   static deleteAuthor = async (req, res, next) => {
     try {
       const id = req.params.id;
-      await author.findByIdAndDelete(id);
-      res.status(200).json({ message: "autor excluído com sucesso" });
+      const result = await author.findByIdAndDelete(id);
+      if (result) {
+        res.status(200).json({ message: "autor excluído com sucesso" });
+      } else {
+        next(new PageNotFound("Autor não encontrado"));
+      }
     } catch (e) {
+      next(e);
+    }
+  };
+
+  static searchAuthor = async (req, res, next) => {
+    const resultQuery = req.query;
+    try {
+      const result = await author.find(resultQuery);
+      res.status(200).json(result);
+    } catch(e) {
       next(e);
     }
   };
