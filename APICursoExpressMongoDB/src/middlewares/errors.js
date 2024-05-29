@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import BaseError from "../Errors/baseError.js";
 import IncorrectRequest from "../Errors/incorrectRequest.js";
 import ValidationError from "../Errors/validationError.js";
-import PageNotFound from "../Errors/pageNotFound.js";
+
 
 
 
@@ -12,7 +12,7 @@ function errorManipulator(e, req, res, next) {
     new IncorrectRequest().sendAnswer(res);
   } else if (e instanceof mongoose.Error.ValidationError) {
     new ValidationError(e).sendAnswer(res);
-  } else if (e instanceof PageNotFound) {
+  } else if (e instanceof BaseError) {
     e.sendAnswer(res);
   } else {
     new BaseError().sendAnswer(res);

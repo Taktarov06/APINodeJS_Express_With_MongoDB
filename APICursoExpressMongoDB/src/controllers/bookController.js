@@ -1,14 +1,27 @@
 import PageNotFound from "../Errors/pageNotFound.js";
 import { author, book } from "../models/index.js";
+import IncorrectRequest from "../Errors/incorrectRequest.js";
 
 
 class BookController {
 
   static listBooks = async (req, res, next) => {
     try {
+      let { limit = 5, page = 1 } = req.query;
+
+      limit = parseInt(limit);
+      page = parseInt(page);
+      if (limit > 0 && page > 0) {
+        const bookList = await book.find({})
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("author")
+          .exec(); // Metodo para fazer a busca por referencia ao inves do metodo q o NoSQL usa 
+        res.status(200).json(bookList);
+      } else {
+        next(new IncorrectRequest());
+      }
       // const bookList = await book.find({}); // Metodo Moongose q conecta com o database e busca o que passa dentro do parametro da função
-      const bookList = await book.find({}).populate("author").exec(); // Metodo para fazer a busca por referencia ao inves do metodo q o NoSQL usa 
-      res.status(200).json(bookList);
     } catch (e) {
       console.error(e.message);
       next(e);
@@ -76,16 +89,16 @@ class BookController {
   static listBookBySearch = async (req, res, next) => {
     try {
       const resultQuery = await searchBook(req.query);
-      if (resultQuery){
+      if (resultQuery) {
         const result = await book
-        .find(resultQuery)
-        .populate("author");
+          .find(resultQuery)
+          .populate("author");
 
-      res.status(200).json(result);
+        res.status(200).json(result);
       } else {
         res.status(200).send([]);
       }
-      
+
     } catch (e) {
       next(e);
     }
@@ -107,7 +120,7 @@ async function searchBook(values) {
 
   if (nameAuthor) {
     const authors = await author.findOne({ name: nameAuthor });
-    if(authors){
+    if (authors) {
       search.author = authors._id;
     } else {
       search = null;
