@@ -1,26 +1,14 @@
 import PageNotFound from "../Errors/pageNotFound.js";
 import { author, book } from "../models/index.js";
-import IncorrectRequest from "../Errors/incorrectRequest.js";
 
 
 class BookController {
 
   static listBooks = async (req, res, next) => {
     try {
-      let { limit = 5, page = 1 } = req.query;
-
-      limit = parseInt(limit);
-      page = parseInt(page);
-      if (limit > 0 && page > 0) {
-        const bookList = await book.find({})
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("author")
-          .exec(); // Metodo para fazer a busca por referencia ao inves do metodo q o NoSQL usa 
-        res.status(200).json(bookList);
-      } else {
-        next(new IncorrectRequest());
-      }
+      const resultSearch = book.find();
+      req.result = resultSearch;
+      next();
       // const bookList = await book.find({}); // Metodo Moongose q conecta com o database e busca o que passa dentro do parametro da função
     } catch (e) {
       console.error(e.message);
@@ -90,11 +78,13 @@ class BookController {
     try {
       const resultQuery = await searchBook(req.query);
       if (resultQuery) {
-        const result = await book
+        const result = book
           .find(resultQuery)
           .populate("author");
 
-        res.status(200).json(result);
+          req.result = result;
+
+          next();
       } else {
         res.status(200).send([]);
       }
